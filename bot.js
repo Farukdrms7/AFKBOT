@@ -1,57 +1,34 @@
 const mineflayer = require('mineflayer');
 
+const bot = mineflayer.createBot({
+  host: 'jokeycraft.falix.gg',
+  port: 25565,
+  username: 'Sunucu'
+});
+
 const PASSWORD = 'afkbot123';
 
-let reconnecting = false;
+bot.on('spawn', () => {
+  console.log('Bot bağlandı!');
 
-function createBot() {
+  // Register + Login
+  setTimeout(() => {
+    bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
+    bot.chat(`/login ${PASSWORD}`);
+  }, 10000);
 
-  if (reconnecting) return;
-  reconnecting = true;
+  startSmartMovement();
+});
 
-  console.log("Bot başlatılıyor...");
+// 🔥 Resource Pack otomatik kabul
+bot.on('resourcePack', (url, hash) => {
+  console.log('Kaynak paketi geldi, kabul ediliyor...');
+  bot.acceptResourcePack();
+});
 
-  const bot = mineflayer.createBot({
-    host: 'jokeycraft.falix.gg',
-    port: 25565,
-    username: 'geek'
-  });
+function startSmartMovement() {
 
-  bot.once('spawn', () => {
-    console.log("Bot bağlandı.");
-    reconnecting = false;
-    startMovement(bot);
-  });
-
-  bot.on('messagestr', (msg) => {
-    if (msg.includes('/register')) {
-      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
-    }
-
-    if (msg.includes('/login')) {
-      bot.chat(`/login ${PASSWORD}`);
-    }
-  });
-
-  bot.on('resourcePack', () => {
-    bot.acceptResourcePack();
-  });
-
-  bot.on('end', () => {
-    console.log("Bağlantı koptu. 30 saniye sonra tekrar denenecek...");
-    setTimeout(() => {
-      reconnecting = false;
-      createBot();
-    }, 30000); // 30 saniye bekle
-  });
-
-  bot.on('error', (err) => {
-    console.log("Hata:", err.message);
-  });
-}
-
-function startMovement(bot) {
-
+  // Rastgele koşma
   setInterval(() => {
     const directions = ['forward', 'back', 'left', 'right'];
     const randomDirection = directions[Math.floor(Math.random() * directions.length)];
@@ -59,17 +36,25 @@ function startMovement(bot) {
     bot.clearControlStates();
     bot.setControlState(randomDirection, true);
     bot.setControlState('sprint', true);
-  }, 6000);
+  }, 4000);
 
+  // Engel görünce zıplama
   setInterval(() => {
-    if (!bot.entity) return;
-
     const block = bot.blockAt(bot.entity.position.offset(0, 0, 1));
+
     if (block && block.boundingBox === 'block') {
       bot.setControlState('jump', true);
-      setTimeout(() => bot.setControlState('jump', false), 400);
+      setTimeout(() => {
+        bot.setControlState('jump', false);
+      }, 500);
     }
-  }, 700);
+  }, 500);
 }
 
-createBot();
+// Atılırsa tekrar bağlan
+bot.on('end', () => {
+  console.log('Bot atıldı, tekrar bağlanıyor...');
+  setTimeout(() => {
+    bot.spawn();
+  }, 5000);
+});
