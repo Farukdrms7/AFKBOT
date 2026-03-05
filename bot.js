@@ -17,24 +17,38 @@ bot.on('spawn', () => {
     bot.chat(`/login ${PASSWORD}`);
   }, 10000);
 
-  startRandomMovement();
+  startSmartMovement();
 });
 
-// Rastgele hareket sistemi
-function startRandomMovement() {
+// 🔥 Resource Pack otomatik kabul
+bot.on('resourcePack', (url, hash) => {
+  console.log('Kaynak paketi geldi, kabul ediliyor...');
+  bot.acceptResourcePack();
+});
+
+function startSmartMovement() {
+
+  // Rastgele koşma
   setInterval(() => {
     const directions = ['forward', 'back', 'left', 'right'];
     const randomDirection = directions[Math.floor(Math.random() * directions.length)];
 
+    bot.clearControlStates();
     bot.setControlState(randomDirection, true);
     bot.setControlState('sprint', true);
+  }, 4000);
 
-    // 2 saniye koşsun
-    setTimeout(() => {
-      bot.clearControlStates();
-    }, 2000);
+  // Engel görünce zıplama
+  setInterval(() => {
+    const block = bot.blockAt(bot.entity.position.offset(0, 0, 1));
 
-  }, 5000); // 5 saniyede bir yön değiştirir
+    if (block && block.boundingBox === 'block') {
+      bot.setControlState('jump', true);
+      setTimeout(() => {
+        bot.setControlState('jump', false);
+      }, 500);
+    }
+  }, 500);
 }
 
 // Atılırsa tekrar bağlan
