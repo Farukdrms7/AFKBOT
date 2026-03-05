@@ -1,34 +1,46 @@
 const mineflayer = require('mineflayer');
 
-const bot = mineflayer.createBot({
-  host: 'jokeycraft.falix.gg',
-  port: 25565,
-  username: 'geek'
-});
-
 const PASSWORD = 'afkbot123';
 
-bot.on('spawn', () => {
-  console.log('Bot bağlandı!');
+function createBot() {
 
-  // Register + Login
-  setTimeout(() => {
-    bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
-    bot.chat(`/login ${PASSWORD}`);
-  }, 10000);
+  const bot = mineflayer.createBot({
+    host: 'SUNUCU_IPIN',
+    port: 25565,
+    username: 'geek'
+  });
 
-  startSmartMovement();
-});
+  bot.on('spawn', () => {
+    console.log('Bot bağlandı!');
 
-// 🔥 Resource Pack otomatik kabul
-bot.on('resourcePack', (url, hash) => {
-  console.log('Kaynak paketi geldi, kabul ediliyor...');
-  bot.acceptResourcePack();
-});
+    // Login sistemi
+    setTimeout(() => {
+      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
+      bot.chat(`/login ${PASSWORD}`);
+    }, 8000);
 
-function startSmartMovement() {
+    startMovement(bot);
+  });
 
-  // Rastgele koşma
+  // Resource pack kabul
+  bot.on('resourcePack', () => {
+    console.log('Kaynak paketi kabul edildi.');
+    bot.acceptResourcePack();
+  });
+
+  // Bağlantı koparsa yeniden oluştur
+  bot.on('end', () => {
+    console.log('Bağlantı koptu. 5 saniye sonra tekrar bağlanılıyor...');
+    setTimeout(createBot, 5000);
+  });
+
+  bot.on('error', (err) => {
+    console.log('Hata:', err.message);
+  });
+}
+
+function startMovement(bot) {
+
   setInterval(() => {
     const directions = ['forward', 'back', 'left', 'right'];
     const randomDirection = directions[Math.floor(Math.random() * directions.length)];
@@ -38,8 +50,10 @@ function startSmartMovement() {
     bot.setControlState('sprint', true);
   }, 4000);
 
-  // Engel görünce zıplama
+  // Engel kontrolü
   setInterval(() => {
+    if (!bot.entity) return;
+
     const block = bot.blockAt(bot.entity.position.offset(0, 0, 1));
 
     if (block && block.boundingBox === 'block') {
@@ -51,10 +65,5 @@ function startSmartMovement() {
   }, 500);
 }
 
-// Atılırsa tekrar bağlan
-bot.on('end', () => {
-  console.log('Bot atıldı, tekrar bağlanıyor...');
-  setTimeout(() => {
-    bot.spawn();
-  }, 5000);
-});
+// Botu başlat
+createBot();
