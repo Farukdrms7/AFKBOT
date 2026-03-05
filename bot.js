@@ -1,31 +1,43 @@
 const mineflayer = require('mineflayer');
 
 const bot = mineflayer.createBot({
-  host: 'jokeycraft.falix.gg',   // Örn: jokeycraft.falix.gg
+  host: 'jokeycraft.falix.gg',
   port: 25565,
-  username: 'geek'       // Bot kullanıcı adı
+  username: 'geek'
 });
 
-const PASSWORD = 'afkbot123'; // Sunucudaki şifre
+const PASSWORD = 'afkbot123';
 
-// Bot sunucuya bağlandığında
 bot.on('spawn', () => {
   console.log('Bot bağlandı!');
 
-  // İlk bağlanışta register + login
+  // Register + Login
   setTimeout(() => {
     bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
     bot.chat(`/login ${PASSWORD}`);
-  }, 10000); // 10 saniye bekle, sunucu hazır olsun
+  }, 10000);
 
-  // 5 dakikada bir hareket et, sunucuda AFK görünmesin
-  setInterval(() => {
-    bot.setControlState('forward', true);
-    setTimeout(() => bot.setControlState('forward', false), 1000);
-  }, 300000);
+  startRandomMovement();
 });
 
-// Eğer bot atılırsa tekrar bağlan
+// Rastgele hareket sistemi
+function startRandomMovement() {
+  setInterval(() => {
+    const directions = ['forward', 'back', 'left', 'right'];
+    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+
+    bot.setControlState(randomDirection, true);
+    bot.setControlState('sprint', true);
+
+    // 2 saniye koşsun
+    setTimeout(() => {
+      bot.clearControlStates();
+    }, 2000);
+
+  }, 5000); // 5 saniyede bir yön değiştirir
+}
+
+// Atılırsa tekrar bağlan
 bot.on('end', () => {
   console.log('Bot atıldı, tekrar bağlanıyor...');
   setTimeout(() => {
