@@ -1,7 +1,7 @@
 const mineflayer = require('mineflayer');
 
 const bot = mineflayer.createBot({
-  host: 'jokeycraft.falix.gg',
+  host: 'SUNUCU_IPIN',
   port: 25565,
   username: 'geek'
 });
@@ -17,24 +17,35 @@ bot.on('spawn', () => {
     bot.chat(`/login ${PASSWORD}`);
   }, 10000);
 
-  startRandomMovement();
+  startSmartMovement();
 });
 
-// Rastgele hareket sistemi
-function startRandomMovement() {
+function startSmartMovement() {
+
   setInterval(() => {
+
     const directions = ['forward', 'back', 'left', 'right'];
     const randomDirection = directions[Math.floor(Math.random() * directions.length)];
 
+    bot.clearControlStates();
     bot.setControlState(randomDirection, true);
     bot.setControlState('sprint', true);
 
-    // 2 saniye koşsun
-    setTimeout(() => {
-      bot.clearControlStates();
-    }, 2000);
+  }, 4000); // 4 saniyede yön değiştir
 
-  }, 5000); // 5 saniyede bir yön değiştirir
+  // Engel kontrol sistemi
+  setInterval(() => {
+    const block = bot.blockAt(bot.entity.position.offset(0, 0, 1));
+
+    if (block && block.boundingBox === 'block') {
+      bot.setControlState('jump', true);
+
+      setTimeout(() => {
+        bot.setControlState('jump', false);
+      }, 500);
+    }
+
+  }, 500);
 }
 
 // Atılırsa tekrar bağlan
