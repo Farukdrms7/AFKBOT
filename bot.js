@@ -12,7 +12,7 @@ function createBot() {
   console.log("Bot başlatılıyor...");
 
   const bot = mineflayer.createBot({
-    host: 'SUNUCU_IPIN',
+    host: 'jokeycraft.falix.gg',
     port: 25565,
     username: 'geek'
   });
