@@ -2,7 +2,14 @@ const mineflayer = require('mineflayer');
 
 const PASSWORD = 'afkbot123';
 
+let reconnecting = false;
+
 function createBot() {
+
+  if (reconnecting) return;
+  reconnecting = true;
+
+  console.log("Bot başlatılıyor...");
 
   const bot = mineflayer.createBot({
     host: 'SUNUCU_IPIN',
@@ -10,32 +17,36 @@ function createBot() {
     username: 'geek'
   });
 
-  bot.on('spawn', () => {
-    console.log('Bot bağlandı!');
-
-    // Login sistemi
-    setTimeout(() => {
-      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
-      bot.chat(`/login ${PASSWORD}`);
-    }, 8000);
-
+  bot.once('spawn', () => {
+    console.log("Bot bağlandı.");
+    reconnecting = false;
     startMovement(bot);
   });
 
-  // Resource pack kabul
+  bot.on('messagestr', (msg) => {
+    if (msg.includes('/register')) {
+      bot.chat(`/register ${PASSWORD} ${PASSWORD}`);
+    }
+
+    if (msg.includes('/login')) {
+      bot.chat(`/login ${PASSWORD}`);
+    }
+  });
+
   bot.on('resourcePack', () => {
-    console.log('Kaynak paketi kabul edildi.');
     bot.acceptResourcePack();
   });
 
-  // Bağlantı koparsa yeniden oluştur
   bot.on('end', () => {
-    console.log('Bağlantı koptu. 5 saniye sonra tekrar bağlanılıyor...');
-    setTimeout(createBot, 5000);
+    console.log("Bağlantı koptu. 30 saniye sonra tekrar denenecek...");
+    setTimeout(() => {
+      reconnecting = false;
+      createBot();
+    }, 30000); // 30 saniye bekle
   });
 
   bot.on('error', (err) => {
-    console.log('Hata:', err.message);
+    console.log("Hata:", err.message);
   });
 }
 
@@ -48,22 +59,17 @@ function startMovement(bot) {
     bot.clearControlStates();
     bot.setControlState(randomDirection, true);
     bot.setControlState('sprint', true);
-  }, 4000);
+  }, 6000);
 
-  // Engel kontrolü
   setInterval(() => {
     if (!bot.entity) return;
 
     const block = bot.blockAt(bot.entity.position.offset(0, 0, 1));
-
     if (block && block.boundingBox === 'block') {
       bot.setControlState('jump', true);
-      setTimeout(() => {
-        bot.setControlState('jump', false);
-      }, 500);
+      setTimeout(() => bot.setControlState('jump', false), 400);
     }
-  }, 500);
+  }, 700);
 }
 
-// Botu başlat
 createBot();
