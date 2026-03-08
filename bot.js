@@ -14,7 +14,7 @@ function createBot() {
   const bot = mineflayer.createBot({
     host: 'jokeycraft.falix.gg',
     port: 25565,
-    username: ''
+    username: '          '
   });
 
   bot.once('spawn', () => {
